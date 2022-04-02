@@ -1,17 +1,15 @@
 package model.match;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class MatchNode {
-    private final long id;
+    private final int id;
     private final Map<MatchOp, MatchNode> t;
 
     public MatchNode(Map<MatchOp, MatchNode> t) {
         this.t = t;
-        this.id = new Random().nextLong();
+        this.id = Matches.Id++;
     }
 
     public boolean isTerminal() {
@@ -29,13 +27,31 @@ public class MatchNode {
         return this;
     }
 
+    String toStringNoCycle(List<Integer> visited) {
+        if (t.size() == 0)
+            return "END " + hashCode();
+        return t.entrySet().stream().map(entry -> {
+            var target = entry.getValue();
+            if (visited.contains(target.id)) {
+                return String.format("CYCLE %d %s", target.id, entry.getKey());
+            }
+            visited.add(target.id);
+            return String.format("%d %s ->\n\t%s", id, entry.getKey(), target.toStringNoCycle(visited));
+        }).collect(Collectors.joining(",\n"));
+    }
+
+    @Override
+    public String toString() {
+        return toStringNoCycle(new ArrayList<>());
+    }
+
     public Map<MatchOp, MatchNode> t() {
         return t;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return id;
     }
 
     @Override
@@ -44,11 +60,5 @@ public class MatchNode {
         if (o == null || getClass() != o.getClass()) return false;
         MatchNode that = (MatchNode) o;
         return id == that.id;
-    }
-
-    @Override
-    public String toString() {
-        return t.size() == 0 ? "END " + hashCode() :
-                t.entrySet().stream().map(entry -> String.format("%s ->\n\t%s", entry.getKey(), entry.getValue())).collect(Collectors.joining(",\n"));
     }
 }

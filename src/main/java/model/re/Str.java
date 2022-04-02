@@ -15,8 +15,8 @@ public record Str(String s) implements Op {
         var cs = s.toCharArray();
         for (int i = cs.length - 1; i >= 0; i--) {
             epsilon = new MatchEpsilon();
-            start = new MatchNode(Map.of(epsilon,
-                    new MatchNode(Map.of(new MatchChar(cs[i]), start))));
+            start = new MatchNode(T(epsilon,
+                    new MatchNode(T(new MatchChar(cs[i]), start))));
         }
         return start.t().get(epsilon);
     }
