@@ -6,8 +6,12 @@ import model.match.MatchOp;
 import java.util.HashMap;
 import java.util.Map;
 
-public sealed interface Op permits Str, Closure, Or {
+public sealed interface Op permits Closure, Concat, Or, Str {
     MatchNode construct();
+
+    default String constructString() {
+        return construct().toString();
+    }
 
     default MatchNode terminal() {
         return new MatchNode(new HashMap<>());

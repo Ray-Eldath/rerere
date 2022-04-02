@@ -5,7 +5,6 @@ import model.match.MatchEpsilon;
 import model.match.MatchNode;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public record Str(String s) implements Op {
     @Override

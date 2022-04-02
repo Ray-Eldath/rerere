@@ -4,7 +4,6 @@ import model.match.MatchEpsilon;
 import model.match.MatchNode;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public record Or(Op l, Op r) implements Op {
     @Override

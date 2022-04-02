@@ -16,25 +16,31 @@ public class MatchNode {
         return t.size() == 0;
     }
 
-    public MatchNode retail(Map<MatchOp, MatchNode> newT) {
+    private MatchNode retailNoCycle(List<Integer> visited, Map<MatchOp, MatchNode> newT) {
         if (isTerminal()) {
             t.putAll(newT);
             return null;
         }
 
         for (var v : t.values())
-            v.retail(newT);
+            if (!visited.contains(v.id)) {
+                visited.add(v.id);
+                v.retailNoCycle(visited, newT);
+            }
         return this;
     }
 
-    String toStringNoCycle(List<Integer> visited) {
+    public MatchNode retail(Map<MatchOp, MatchNode> newT) {
+        return retailNoCycle(new ArrayList<>(), newT);
+    }
+
+    private String toStringNoCycle(Set<Integer> visited) {
         if (t.size() == 0)
             return "END " + hashCode();
-        return t.entrySet().stream().map(entry -> {
+        return t.entrySet().stream().sorted(Comparator.comparingInt(x -> x.getValue().id())).map(entry -> {
             var target = entry.getValue();
-            if (visited.contains(target.id)) {
-                return String.format("CYCLE %d %s", target.id, entry.getKey());
-            }
+            if (visited.contains(target.id))
+                return String.format("%d %s ->\n\tCYCLE %s", id, entry.getKey(), target.id);
             visited.add(target.id);
             return String.format("%d %s ->\n\t%s", id, entry.getKey(), target.toStringNoCycle(visited));
         }).collect(Collectors.joining(",\n"));
@@ -42,7 +48,11 @@ public class MatchNode {
 
     @Override
     public String toString() {
-        return toStringNoCycle(new ArrayList<>());
+        return toStringNoCycle(new HashSet<>());
+    }
+
+    public int id() {
+        return id;
     }
 
     public Map<MatchOp, MatchNode> t() {

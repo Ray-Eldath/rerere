@@ -1,5 +1,5 @@
 package model.match;
 
 public class Matches {
-    static int Id = 0;
+    public static int Id = 0;
 }
