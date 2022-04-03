@@ -1,18 +1,20 @@
 package model.match;
 
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.jetbrains.annotations.Contract;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collection;
 
-public class MatchNodes extends HashSet<MatchNode> {
+public class MatchNodes extends UnifiedSet<MatchNode> {
     private boolean terminal = false;
 
     public MatchNodes() {
         super();
     }
 
-    public MatchNodes(Set<? extends MatchNode> c) {
+    public MatchNodes(Collection<? extends MatchNode> c) {
         super(c);
     }
 
@@ -21,14 +23,6 @@ public class MatchNodes extends HashSet<MatchNode> {
         if (node.isTerminal())
             terminal = true;
         return super.add(node);
-    }
-
-    @Contract(pure = true)
-    public MatchNodes epsilonClosure() {
-        var closure = new MatchNodes();
-        for (var n : this)
-            closure.addAll(n.epsilonClosure());
-        return closure;
     }
 
     @Contract(pure = true)
@@ -42,7 +36,33 @@ public class MatchNodes extends HashSet<MatchNode> {
         return tos;
     }
 
+    @Contract(pure = true)
+    public MatchNodes epsilonClosure() {
+        var closure = new MatchNodes();
+        for (var n : this)
+            closure.addAll(n.epsilonClosure());
+        return closure;
+    }
+
+    @Contract(pure = true)
+    public ImmutableList<MatchNodes> split(char[] sigma) {
+        for (var c : sigma) {
+            var partitioned = this.partition(e -> {
+                var accepted = e.accept(c);
+                return accepted == null || this.contains(accepted);
+            });
+            if (partitioned.getSelected().notEmpty() && partitioned.getRejected().notEmpty())
+                return Lists.immutable.of(new MatchNodes(partitioned.getSelected()), new MatchNodes(partitioned.getRejected()));
+        }
+        return Lists.immutable.of(this);
+    }
+
     public boolean terminal() {
         return terminal;
+    }
+
+    @Override
+    public String toString() {
+        return this.collect(MatchNode::id).makeString("{", ", ", "}");
     }
 }

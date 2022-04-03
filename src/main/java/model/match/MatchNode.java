@@ -1,8 +1,11 @@
 package model.match;
 
+import model.match.format.Formatter;
+import model.match.format.Formatters;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.SortedMaps;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.tuple.Pair;
 import org.jetbrains.annotations.Contract;
@@ -56,7 +59,7 @@ public class MatchNode {
         return closure;
     }
 
-    private MatchNode retailNoCycle(List<Integer> visited, Map<MatchOp, MatchNode> newT) {
+    private MatchNode retailRec(List<Integer> visited, Map<MatchOp, MatchNode> newT) {
         if (isTerminal()) {
             transitions.putAll(newT);
             return null;
@@ -64,25 +67,13 @@ public class MatchNode {
 
         transitions.valuesView().reject(t -> visited.contains(t.id)).forEach(t -> {
             visited.add(t.id);
-            t.retailNoCycle(visited, newT);
+            t.retailRec(visited, newT);
         });
         return this;
     }
 
     public MatchNode retail(Map<MatchOp, MatchNode> newT) {
-        return retailNoCycle(new ArrayList<>(), newT);
-    }
-
-    private String toStringNoCycle(Set<Integer> visited) {
-        if (transitions.size() == 0) return "END " + hashCode();
-        return transitions.keyValuesView().toSortedList(Comparator.comparingInt(e -> e.getTwo().id)).collect(entry -> {
-            var matcher = entry.getOne();
-            var target = entry.getTwo();
-            if (visited.contains(target.id))
-                return String.format("%d %s ->\n\tCYCLE %s%s", id, matcher, target.isTerminalString(), target.id);
-            visited.add(target.id);
-            return String.format("%d %s%s ->\n\t%s", id, isTerminalString(), matcher, target.toStringNoCycle(visited));
-        }).makeString(",\n");
+        return retailRec(new ArrayList<>(), newT);
     }
 
     private void nodesRec(List<MatchNode> nodes) {
@@ -93,14 +84,35 @@ public class MatchNode {
         }
     }
 
-    public MatchGraph toMatchGraph() {
+    public MutableList<MatchNode> nodes() {
         var nodes = Lists.mutable.<MatchNode>empty();
         nodesRec(nodes);
-        return new MatchGraph(nodes, this);
+        return nodes;
     }
 
-    private String isTerminalString() {
-        return isTerminal() ? "END " : "";
+    public MatchGraph toMatchGraph(char... sigma) {
+        return new MatchGraph(nodes(), this, sigma);
+    }
+
+    private String formatRec(Formatter f, Set<Integer> visited) {
+        if (transitions.size() == 0) return f.formatNode(this);
+        return transitions.keyValuesView().toSortedList(Comparator.comparingInt(e -> e.getTwo().id)).collect(entry -> {
+            var matcher = entry.getOne();
+            var target = entry.getTwo();
+            if (visited.contains(target.id))
+                return f.formatNode(this) + f.formatVertex(this, matcher, target) + f.formatCycleNode(target);
+            visited.add(target.id);
+            return f.formatNode(this) + f.formatVertex(this, matcher, target) + target.formatRec(f, visited);
+        }).makeString(f.separator());
+    }
+
+    public String format(Formatter f) {
+        return formatRec(f, new HashSet<>());
+    }
+
+    @Override
+    public String toString() {
+        return formatRec(Formatters.DEFAULT, new HashSet<>());
     }
 
     public boolean isTerminal() {
@@ -109,11 +121,6 @@ public class MatchNode {
 
     public int id() {
         return id;
-    }
-
-    @Override
-    public String toString() {
-        return toStringNoCycle(new HashSet<>());
     }
 
     @Override

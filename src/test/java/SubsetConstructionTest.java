@@ -18,7 +18,6 @@ public class SubsetConstructionTest {
                 .containsExactly(0, 3, 6, 8, 9);
     }
 
-
     @Test
     @DisplayName("deltaEpsilonClosure a(b|c)*")
     void deltaEpsilonClosure() {
@@ -35,21 +34,40 @@ public class SubsetConstructionTest {
 
     @Test
     @DisplayName("subset a(b|c)*")
-    void subset() {
-        assertThat(new Concat(new Str("a"), new Closure(new Or(new Str("b"), new Str("c")))).construct().toMatchGraph().subset('a', 'b', 'c').toString()).isEqualTo("""
+    void subset1() {
+        var graph = new Concat(new Str("a"), new Closure(new Or(new Str("b"), new Str("c")))).construct().toMatchGraph('a', 'b', 'c');
+        Tests.graphviz(graph);
+        assertThat(graph.subset().toString()).isEqualTo("""
                 13 14 16 15
-
+                                
                 13 a ->
-                	14 END b ->
-                	15 b ->
+                	END 14 b ->
+                	END 15 b ->
                 	CYCLE END 15,
-                15 END c ->
-                	16 b ->
+                END 15 c ->
+                	END 16 b ->
                 	CYCLE END 15,
-                16 c ->
+                END 16 c ->
                 	CYCLE END 16,
-                14 c ->
+                END 14 c ->
                 	CYCLE END 16""");
+    }
+
+    @Test
+    @DisplayName("subset fee|fie")
+    void subset2() {
+        var graph = new Concat(new Str("f"), new Or(new Str("ee"), new Str("ie"))).construct().toMatchGraph('e', 'f', 'i');
+        Tests.graphviz(graph);
+        assertThat(graph.subset().toString()).isEqualTo("""
+                15 16 17 18 20 19
+                                
+                15 f ->
+                	16 e ->
+                	17 e ->
+                	END 19,
+                16 i ->
+                	18 e ->
+                	END 20""");
     }
 
     @AfterEach
