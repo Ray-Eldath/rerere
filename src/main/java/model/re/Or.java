@@ -3,12 +3,10 @@ package model.re;
 import model.match.MatchEpsilon;
 import model.match.MatchNode;
 
-import java.util.HashMap;
-
 public record Or(Op l, Op r) implements Op {
     @Override
     public MatchNode construct() {
-        var terminal = new MatchNode(new HashMap<>());
+        var terminal = new MatchNode();
         return new MatchNode(T(
                 new MatchEpsilon(), l.construct().retail(T(new MatchEpsilon(), terminal)),
                 new MatchEpsilon(), r.construct().retail(T(new MatchEpsilon(), terminal))));

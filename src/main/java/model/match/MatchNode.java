@@ -1,32 +1,86 @@
 package model.match;
 
+import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.factory.SortedMaps;
+import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.tuple.Pair;
+import org.jetbrains.annotations.Contract;
+
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MatchNode {
     private final int id;
-    private final Map<MatchOp, MatchNode> t;
+    private final MutableMap<MatchOp, MatchNode> transitions;
+    private boolean terminal = false;
 
-    public MatchNode(Map<MatchOp, MatchNode> t) {
-        this.t = t;
+    public MatchNode() {
+        this(SortedMaps.mutable.empty());
+    }
+
+    public MatchNode(MatchNodes nodes) {
+        this(nodes.terminal());
+    }
+
+    public MatchNode(Map<MatchOp, MatchNode> transitions) {
+        this.transitions = Maps.mutable.ofMap(transitions);
         this.id = Matches.Id++;
     }
 
-    public boolean isTerminal() {
-        return t.size() == 0;
+    public MatchNode(boolean terminal) {
+        this(SortedMaps.mutable.empty());
+        this.terminal = terminal;
+    }
+
+    @Contract(pure = true)
+    public MatchNode subset(char... sigma) {
+        var q0 = epsilonClosure();
+        var WorkList = new LinkedList<>(List.of(q0));
+        var start = new MatchNode();
+        var Q = new LinkedHashMap<>(Map.of(q0, start));
+        while (!WorkList.isEmpty()) {
+            var q = WorkList.pop();
+            for (var c : sigma) {
+                var t = q.accept(c).epsilonClosure();
+                if (!Q.containsKey(t)) {
+                    Q.put(t, new MatchNode(t));
+                    WorkList.add(t);
+                }
+                if (!t.isEmpty()) Q.get(q).transitions.put(new MatchChar(c), Q.get(t));
+            }
+        }
+        return start;
+    }
+
+    @Contract(pure = true)
+    public MatchNode accept(char c) {
+        return transitions.get(new MatchChar(c));
+    }
+
+    @Contract(pure = true)
+    public MatchNode accept(MatchOp op) {
+        return transitions.get(op);
+    }
+
+    @Contract(pure = true)
+    public MatchNodes epsilonClosure() {
+        var closure = new MatchNodes(Set.of(this));
+        transitions.keyValuesView().asLazy().select(p -> p.getOne() instanceof MatchEpsilon).collect(Pair::getTwo).forEach(node -> {
+            closure.add(node);
+            closure.addAll(node.epsilonClosure());
+        });
+        return closure;
     }
 
     private MatchNode retailNoCycle(List<Integer> visited, Map<MatchOp, MatchNode> newT) {
         if (isTerminal()) {
-            t.putAll(newT);
+            transitions.putAll(newT);
             return null;
         }
 
-        for (var v : t.values())
-            if (!visited.contains(v.id)) {
-                visited.add(v.id);
-                v.retailNoCycle(visited, newT);
-            }
+        transitions.valuesView().reject(t -> visited.contains(t.id)).forEach(t -> {
+            visited.add(t.id);
+            t.retailNoCycle(visited, newT);
+        });
         return this;
     }
 
@@ -35,28 +89,32 @@ public class MatchNode {
     }
 
     private String toStringNoCycle(Set<Integer> visited) {
-        if (t.size() == 0)
-            return "END " + hashCode();
-        return t.entrySet().stream().sorted(Comparator.comparingInt(x -> x.getValue().id())).map(entry -> {
-            var target = entry.getValue();
+        if (transitions.size() == 0) return "END " + hashCode();
+        return transitions.keyValuesView().toSortedList(Comparator.comparingInt(e -> e.getTwo().id)).collect(entry -> {
+            var matcher = entry.getOne();
+            var target = entry.getTwo();
             if (visited.contains(target.id))
-                return String.format("%d %s ->\n\tCYCLE %s", id, entry.getKey(), target.id);
+                return String.format("%d %s ->\n\tCYCLE %s%s", id, matcher, target.isTerminalString(), target.id);
             visited.add(target.id);
-            return String.format("%d %s ->\n\t%s", id, entry.getKey(), target.toStringNoCycle(visited));
-        }).collect(Collectors.joining(",\n"));
+            return String.format("%d %s%s ->\n\t%s", id, isTerminalString(), matcher, target.toStringNoCycle(visited));
+        }).makeString(",\n");
     }
 
-    @Override
-    public String toString() {
-        return toStringNoCycle(new HashSet<>());
+    private String isTerminalString() {
+        return isTerminal() ? "END " : "";
+    }
+
+    public boolean isTerminal() {
+        return transitions.size() == 0 || terminal;
     }
 
     public int id() {
         return id;
     }
 
-    public Map<MatchOp, MatchNode> t() {
-        return t;
+    @Override
+    public String toString() {
+        return toStringNoCycle(new HashSet<>());
     }
 
     @Override

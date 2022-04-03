@@ -37,7 +37,7 @@ public class ThompsonConstructionTest {
                 7 ε ->
                 	5 c ->
                 	4 ε ->
-                	CYCLE 0""");
+                	CYCLE END 0""");
     }
 
     @Test
@@ -48,7 +48,7 @@ public class ThompsonConstructionTest {
                 4 ε ->
                 	2 a ->
                 	1 ε ->
-                	CYCLE 0,
+                	CYCLE END 0,
                 1 ε ->
                 	CYCLE 2""");
     }
@@ -63,7 +63,7 @@ public class ThompsonConstructionTest {
                 	3 b ->
                 	2 ε ->
                 	1 ε ->
-                	CYCLE 0,
+                	CYCLE END 0,
                 1 ε ->
                 	CYCLE 8,
                 8 ε ->
@@ -84,7 +84,7 @@ public class ThompsonConstructionTest {
                 	6 b ->
                 	5 ε ->
                 	4 ε ->
-                	CYCLE 3,
+                	CYCLE END 3,
                 4 ε ->
                 	CYCLE 11,
                 11 ε ->

@@ -2,9 +2,8 @@ package model.re;
 
 import model.match.MatchNode;
 import model.match.MatchOp;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.map.MutableMap;
 
 public sealed interface Op permits Closure, Concat, Or, Str {
     MatchNode construct();
@@ -14,14 +13,14 @@ public sealed interface Op permits Closure, Concat, Or, Str {
     }
 
     default MatchNode terminal() {
-        return new MatchNode(new HashMap<>());
+        return new MatchNode(true);
     }
 
-    default Map<MatchOp, MatchNode> T(MatchOp k1, MatchNode v1) {
-        return new HashMap<>(Map.of(k1, v1));
+    default MutableMap<MatchOp, MatchNode> T(MatchOp k1, MatchNode v1) {
+        return Maps.mutable.of(k1, v1);
     }
 
-    default Map<MatchOp, MatchNode> T(MatchOp k1, MatchNode v1, MatchOp k2, MatchNode v2) {
-        return new HashMap<>(Map.of(k1, v1, k2, v2));
+    default MutableMap<MatchOp, MatchNode> T(MatchOp k1, MatchNode v1, MatchOp k2, MatchNode v2) {
+        return Maps.mutable.of(k1, v1, k2, v2);
     }
 }
