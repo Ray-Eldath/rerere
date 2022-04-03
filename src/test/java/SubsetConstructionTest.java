@@ -36,18 +36,20 @@ public class SubsetConstructionTest {
     @Test
     @DisplayName("subset a(b|c)*")
     void subset() {
-        assertThat(new Concat(new Str("a"), new Closure(new Or(new Str("b"), new Str("c")))).construct().subset('a', 'b', 'c').toString()).isEqualTo("""
+        assertThat(new Concat(new Str("a"), new Closure(new Or(new Str("b"), new Str("c")))).construct().toMatchGraph().subset('a', 'b', 'c').toString()).isEqualTo("""
+                13 14 16 15
+
                 13 a ->
                 	14 END b ->
+                	15 b ->
+                	CYCLE END 15,
+                15 END c ->
                 	16 b ->
+                	CYCLE END 15,
+                16 c ->
                 	CYCLE END 16,
-                16 END c ->
-                	17 b ->
-                	CYCLE END 16,
-                17 c ->
-                	CYCLE END 17,
                 14 c ->
-                	CYCLE END 17""");
+                	CYCLE END 16""");
     }
 
     @AfterEach

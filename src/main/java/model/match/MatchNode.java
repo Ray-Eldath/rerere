@@ -1,5 +1,6 @@
 package model.match;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.SortedMaps;
 import org.eclipse.collections.api.map.MutableMap;
@@ -32,26 +33,6 @@ public class MatchNode {
     }
 
     @Contract(pure = true)
-    public MatchNode subset(char... sigma) {
-        var q0 = epsilonClosure();
-        var WorkList = new LinkedList<>(List.of(q0));
-        var start = new MatchNode();
-        var Q = new LinkedHashMap<>(Map.of(q0, start));
-        while (!WorkList.isEmpty()) {
-            var q = WorkList.pop();
-            for (var c : sigma) {
-                var t = q.accept(c).epsilonClosure();
-                if (!Q.containsKey(t)) {
-                    Q.put(t, new MatchNode(t));
-                    WorkList.add(t);
-                }
-                if (!t.isEmpty()) Q.get(q).transitions.put(new MatchChar(c), Q.get(t));
-            }
-        }
-        return start;
-    }
-
-    @Contract(pure = true)
     public MatchNode accept(char c) {
         return transitions.get(new MatchChar(c));
     }
@@ -59,6 +40,10 @@ public class MatchNode {
     @Contract(pure = true)
     public MatchNode accept(MatchOp op) {
         return transitions.get(op);
+    }
+
+    public void transfer(MatchOp op, MatchNode node) {
+        transitions.put(op, node);
     }
 
     @Contract(pure = true)
@@ -98,6 +83,20 @@ public class MatchNode {
             visited.add(target.id);
             return String.format("%d %s%s ->\n\t%s", id, isTerminalString(), matcher, target.toStringNoCycle(visited));
         }).makeString(",\n");
+    }
+
+    private void nodesRec(List<MatchNode> nodes) {
+        nodes.add(this);
+        for (var v : transitions.values()) {
+            if (!nodes.contains(v))
+                v.nodesRec(nodes);
+        }
+    }
+
+    public MatchGraph toMatchGraph() {
+        var nodes = Lists.mutable.<MatchNode>empty();
+        nodesRec(nodes);
+        return new MatchGraph(nodes, this);
     }
 
     private String isTerminalString() {
