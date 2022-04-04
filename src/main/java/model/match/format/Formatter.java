@@ -1,7 +1,7 @@
 package model.match.format;
 
 import model.match.MatchNode;
-import model.match.MatchOp;
+import model.match.op.MatchOp;
 
 public interface Formatter {
     default String formatNode(MatchNode node) {

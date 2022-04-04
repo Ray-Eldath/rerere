@@ -4,7 +4,7 @@ import model.match.MatchNode;
 import org.eclipse.collections.api.list.ImmutableList;
 
 public interface GraphFormatter extends Formatter {
-    String start(ImmutableList<MatchNode> nodes);
+    String start(MatchNode start, ImmutableList<MatchNode> nodes);
 
     default String preamble() {
         return "";

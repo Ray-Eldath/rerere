@@ -1,3 +1,5 @@
+package test;
+
 import model.match.MatchGraph;
 import model.match.format.Formatters;
 

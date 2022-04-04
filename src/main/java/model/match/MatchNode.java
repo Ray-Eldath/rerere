@@ -2,6 +2,9 @@ package model.match;
 
 import model.match.format.Formatter;
 import model.match.format.Formatters;
+import model.match.op.MatchChar;
+import model.match.op.MatchEpsilon;
+import model.match.op.MatchOp;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.SortedMaps;
@@ -21,7 +24,7 @@ public class MatchNode {
         this(SortedMaps.mutable.empty());
     }
 
-    public MatchNode(MatchNodes nodes) {
+    public MatchNode(MatchNodeSet nodes) {
         this(nodes.terminal());
     }
 
@@ -50,8 +53,8 @@ public class MatchNode {
     }
 
     @Contract(pure = true)
-    public MatchNodes epsilonClosure() {
-        var closure = new MatchNodes(Set.of(this));
+    public MatchNodeSet epsilonClosure() {
+        var closure = new MatchNodeSet(Set.of(this));
         transitions.keyValuesView().asLazy().select(p -> p.getOne() instanceof MatchEpsilon).collect(Pair::getTwo).forEach(node -> {
             closure.add(node);
             closure.addAll(node.epsilonClosure());
@@ -59,21 +62,21 @@ public class MatchNode {
         return closure;
     }
 
-    private MatchNode retailRec(List<Integer> visited, Map<MatchOp, MatchNode> newT) {
+    private MatchNode retailRec(List<Integer> visited, Map<MatchOp, MatchNode> newTransitions) {
         if (isTerminal()) {
-            transitions.putAll(newT);
+            transitions.putAll(newTransitions);
             return null;
         }
 
         transitions.valuesView().reject(t -> visited.contains(t.id)).forEach(t -> {
             visited.add(t.id);
-            t.retailRec(visited, newT);
+            t.retailRec(visited, newTransitions);
         });
         return this;
     }
 
-    public MatchNode retail(Map<MatchOp, MatchNode> newT) {
-        return retailRec(new ArrayList<>(), newT);
+    public MatchNode retail(Map<MatchOp, MatchNode> newTransitions) {
+        return retailRec(new ArrayList<>(), newTransitions);
     }
 
     private void nodesRec(List<MatchNode> nodes) {

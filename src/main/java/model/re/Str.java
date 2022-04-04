@@ -1,8 +1,8 @@
 package model.re;
 
-import model.match.MatchChar;
-import model.match.MatchEpsilon;
 import model.match.MatchNode;
+import model.match.op.MatchChar;
+import model.match.op.MatchEpsilon;
 
 public record Str(String s) implements Op {
     @Override

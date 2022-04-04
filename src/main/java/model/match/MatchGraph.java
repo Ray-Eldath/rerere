@@ -1,16 +1,29 @@
 package model.match;
 
+import model.match.evaluate.EagerEvaluator;
 import model.match.format.GraphFormatter;
+import model.match.op.MatchChar;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.iterator.CharIterator;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.factory.OrderedMaps;
+import org.eclipse.collections.impl.factory.Strings;
 import org.jetbrains.annotations.Contract;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 public record MatchGraph(MutableList<MatchNode> nodes, MatchNode start, char[] sigma) {
+    public Iterator<String> evaluate(CharIterator chars) {
+        return new EagerEvaluator(this, chars);
+    }
+
+    public Iterator<String> evaluate(String str) {
+        return new EagerEvaluator(this, Strings.asChars(str).toImmutable().charIterator());
+    }
+
     @Contract(pure = true)
     public MatchGraph subset() {
         var q0 = start.epsilonClosure();
@@ -35,8 +48,8 @@ public record MatchGraph(MutableList<MatchNode> nodes, MatchNode start, char[] s
     @Contract(pure = true)
     public MatchGraph minify() {
         var t = nodes.partition(MatchNode::isTerminal);
-        var T = Lists.mutable.of(new MatchNodes(t.getSelected()), new MatchNodes(t.getRejected()));
-        var P = Lists.mutable.<MatchNodes>empty();
+        var T = Lists.mutable.of(new MatchNodeSet(t.getSelected()), new MatchNodeSet(t.getRejected()));
+        var P = Lists.mutable.<MatchNodeSet>empty();
         while (!P.equals(T)) {
             P = T;
             T = Lists.mutable.empty();
@@ -61,7 +74,7 @@ public record MatchGraph(MutableList<MatchNode> nodes, MatchNode start, char[] s
     }
 
     public String format(GraphFormatter f) {
-        return f.preamble() + f.start(nodes.toImmutable()) + start.format(f) + f.epilogue();
+        return f.preamble() + f.start(start, nodes.toImmutable()) + start.format(f) + f.epilogue();
     }
 
     @Override

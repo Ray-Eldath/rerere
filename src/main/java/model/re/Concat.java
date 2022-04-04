@@ -1,7 +1,7 @@
 package model.re;
 
-import model.match.MatchEpsilon;
 import model.match.MatchNode;
+import model.match.op.MatchEpsilon;
 
 public record Concat(Op a, Op b) implements Op {
     @Override

@@ -1,3 +1,5 @@
+package test;
+
 import model.match.MatchNode;
 import model.match.Matches;
 import model.re.Closure;

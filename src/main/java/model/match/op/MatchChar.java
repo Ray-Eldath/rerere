@@ -1,4 +1,4 @@
-package model.match;
+package model.match.op;
 
 public record MatchChar(char c) implements MatchOp {
     @Override

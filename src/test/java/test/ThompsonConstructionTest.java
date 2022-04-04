@@ -1,3 +1,5 @@
+package test;
+
 import model.match.Matches;
 import model.re.Closure;
 import model.re.Concat;

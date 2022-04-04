@@ -7,14 +7,14 @@ import org.jetbrains.annotations.Contract;
 
 import java.util.Collection;
 
-public class MatchNodes extends UnifiedSet<MatchNode> {
+public class MatchNodeSet extends UnifiedSet<MatchNode> {
     private boolean terminal = false;
 
-    public MatchNodes() {
+    public MatchNodeSet() {
         super();
     }
 
-    public MatchNodes(Collection<? extends MatchNode> c) {
+    public MatchNodeSet(Collection<? extends MatchNode> c) {
         super(c);
     }
 
@@ -26,8 +26,8 @@ public class MatchNodes extends UnifiedSet<MatchNode> {
     }
 
     @Contract(pure = true)
-    public MatchNodes accept(char c) {
-        var tos = new MatchNodes();
+    public MatchNodeSet accept(char c) {
+        var tos = new MatchNodeSet();
         for (var n : this) {
             var target = n.accept(c);
             if (target != null)
@@ -37,22 +37,22 @@ public class MatchNodes extends UnifiedSet<MatchNode> {
     }
 
     @Contract(pure = true)
-    public MatchNodes epsilonClosure() {
-        var closure = new MatchNodes();
+    public MatchNodeSet epsilonClosure() {
+        var closure = new MatchNodeSet();
         for (var n : this)
             closure.addAll(n.epsilonClosure());
         return closure;
     }
 
     @Contract(pure = true)
-    public ImmutableList<MatchNodes> split(char[] sigma) {
+    public ImmutableList<MatchNodeSet> split(char[] sigma) {
         for (var c : sigma) {
             var partitioned = this.partition(e -> {
                 var accepted = e.accept(c);
                 return accepted == null || this.contains(accepted);
             });
             if (partitioned.getSelected().notEmpty() && partitioned.getRejected().notEmpty())
-                return Lists.immutable.of(new MatchNodes(partitioned.getSelected()), new MatchNodes(partitioned.getRejected()));
+                return Lists.immutable.of(new MatchNodeSet(partitioned.getSelected()), new MatchNodeSet(partitioned.getRejected()));
         }
         return Lists.immutable.of(this);
     }

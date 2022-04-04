@@ -1,4 +1,4 @@
-package model.match;
+package model.match.op;
 
 public final class MatchEpsilon implements MatchOp {
     @Override

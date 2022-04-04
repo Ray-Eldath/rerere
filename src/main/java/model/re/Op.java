@@ -1,12 +1,22 @@
 package model.re;
 
+import model.match.MatchGraph;
 import model.match.MatchNode;
-import model.match.MatchOp;
+import model.match.Matches;
+import model.match.op.MatchOp;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 
 public sealed interface Op permits Closure, Concat, Or, Str {
     MatchNode construct();
+
+    default MatchGraph build(char... sigma) {
+        var subset = construct().toMatchGraph(sigma).subset();
+        Matches.reset();
+        var minified = subset.minify();
+        Matches.reset();
+        return minified;
+    }
 
     default String constructString() {
         return construct().toString();

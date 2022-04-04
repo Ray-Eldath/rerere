@@ -1,7 +1,7 @@
 package model.match.format;
 
 import model.match.MatchNode;
-import model.match.MatchOp;
+import model.match.op.MatchOp;
 import org.eclipse.collections.api.list.ImmutableList;
 
 public class Formatters {
@@ -36,10 +36,13 @@ public class Formatters {
         }
 
         @Override
-        public String start(ImmutableList<MatchNode> nodes) {
-            return nodes.select(MatchNode::isTerminal).collect(n -> String.format("""
-                      %d [shape="doublecircle"]
-                    """, n.id())).makeString("", "", "\n");
+        public String start(MatchNode start, ImmutableList<MatchNode> nodes) {
+            return String.format("""
+                      %d [style="filled" fillcolor="black" fontcolor="white"]
+                    """, start.id()) +
+                    nodes.select(MatchNode::isTerminal).collect(n -> String.format("""
+                              %d [shape="doublecircle"]
+                            """, n.id())).makeString("", "", "\n");
         }
 
         @Override

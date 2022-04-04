@@ -6,8 +6,9 @@ import model.re.Or;
 import model.re.Str;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import test.Tests;
 
-public class AllTest {
+public class DFATest {
     @Test
     @DisplayName("fee|fie")
     void all1() {
@@ -18,6 +19,22 @@ public class AllTest {
     @DisplayName("a(b|c)*")
     void all2() {
         graphvizAll(new Concat(new Str("a"), new Closure(new Or(new Str("b"), new Str("c")))).construct().toMatchGraph('a', 'b', 'c'));
+    }
+
+    @Test
+    @DisplayName("aaa(b|c)*")
+    void all3() {
+        graphvizAll(new Concat(new Str("aaa"), new Closure(new Or(new Str("b"), new Str("c")))).construct().toMatchGraph('a', 'b', 'c'));
+    }
+
+    @Test
+    @DisplayName("(ab)*|a(b|c)*")
+    void all4() {
+        var graph =
+                new Or(new Closure(new Str("ab")),
+                        new Concat(new Str("a"),
+                                new Closure(new Or(new Str("b"), new Str("c"))))).construct().toMatchGraph('a', 'b', 'c');
+        graphvizAll(graph);
     }
 
     private void graphvizAll(MatchGraph graph) {
